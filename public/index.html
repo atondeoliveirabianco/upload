@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script src="https://unpkg.com/@vercel/blob/dist/index.browser.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cloud Space Pro Max - Vercel Blob</title>
@@ -386,28 +387,24 @@
     }
 
     async function uploadFileToVercel(file) {
-      try {
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'x-filename': encodeURIComponent(file.name),
-            'content-type': file.type
-          },
-          body: file
-        });
+  try {
+    showToast('Enviando VSL... aguarde.');
 
-        const data = await response.json();
-        if (data.url) {
-          renderMediaCard(data.url, file.type, file.name);
-          showToast('Upload concluído com sucesso!');
-        } else {
-          alert('Erro ao fazer upload.');
-        }
-      } catch (err) {
-        console.error('Erro no upload:', err);
-        alert('Erro de conexão ao enviar arquivo.');
-      }
+    // Envia o vídeo pesado direto do navegador para o Vercel Blob sem passar pelo limite da API
+    const blob = await VercelBlob.upload(file.name, file, {
+      access: 'public',
+      handleUploadUrl: '/api/upload',
+    });
+
+    if (blob.url) {
+      renderMediaCard(blob.url, file.type, file.name);
+      showToast('Upload concluído com sucesso!');
     }
+  } catch (err) {
+    console.error('Erro no upload direto:', err);
+    alert('Erro ao enviar o vídeo: ' + err.message);
+  }
+}
 
     // 3. CARREGAR LISTA DE ARQUIVOS
     async function loadFiles() {
