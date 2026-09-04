@@ -9,6 +9,8 @@ export default async function handler(req, res) {
     const jsonResponse = await handleUpload({
       body: req.body,
       request: req,
+      // Passa o token de leitura/escrita explicitamente
+      token: process.env.BLOB_READ_WRITE_TOKEN,
       onBeforeGenerateToken: async (pathname) => {
         return {
           allowedContentTypes: [
@@ -18,8 +20,8 @@ export default async function handler(req, res) {
           maximumSizeInBytes: 500 * 1024 * 1024, // Limite de 500 MB por vídeo
         };
       },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
-        console.log('Upload concluído com sucesso:', blob.url);
+      onUploadCompleted: async ({ blob }) => {
+        console.log('Upload concluído:', blob.url);
       },
     });
 
