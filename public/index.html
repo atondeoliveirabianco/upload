@@ -341,155 +341,156 @@
 
   <div class="toast" id="toast">Link copiado para a área de transferência!</div>
 
-  <script>
-    const dashboard = document.getElementById('dashboard');
-    const mediaGrid = document.getElementById('media-grid');
-    const emptyState = document.getElementById('empty-state');
-    const toast = document.getElementById('toast');
+<script type="module">
+  import { upload } from 'https://esm.sh/@vercel/blob';
 
-    // Ao carregar a página, busca os arquivos salvos no Vercel Blob
-    document.addEventListener('DOMContentLoaded', loadFiles);
+  const dashboard = document.getElementById('dashboard');
+  const mediaGrid = document.getElementById('media-grid');
+  const emptyState = document.getElementById('empty-state');
+  const toast = document.getElementById('toast');
 
-    // 1. GERENCIAMENTO DE DRAG AND DROP
-    ['dragenter', 'dragover'].forEach(eventName => {
-      window.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dashboard.classList.add('drag-active');
-      }, false);
-    });
+  document.addEventListener('DOMContentLoaded', loadFiles);
 
-    ['dragleave', 'drop'].forEach(eventName => {
-      window.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.target === dashboard || e.type === 'drop') {
-          dashboard.classList.remove('drag-active');
-        }
-      }, false);
-    });
+  // 1. DRAG AND DROP
+  ['dragenter', 'dragover'].forEach(eventName => {
+    window.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dashboard.classList.add('drag-active');
+    }, false);
+  });
 
-    window.addEventListener('drop', (e) => {
-      const dt = e.dataTransfer;
-      const files = dt.files;
-      handleFiles(files);
-    });
-
-    // 2. PROCESSAR ARQUIVOS E ENVIAR PARA O SERVERLESS DA VERCEL
-    async function handleFiles(files) {
-      if (files.length > 0 && emptyState) {
-        emptyState.style.display = 'none';
+  ['dragleave', 'drop'].forEach(eventName => {
+    window.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.target === dashboard || e.type === 'drop') {
+        dashboard.classList.remove('drag-active');
       }
+    }, false);
+  });
 
-      for (const file of files) {
-        await uploadFileToVercel(file);
-      }
+  window.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFiles(files);
+  });
+
+  // Tornar a função global para o input do HTML
+  window.handleFiles = async function(files) {
+    if (files.length > 0 && emptyState) {
+      emptyState.style.display = 'none';
     }
 
-    async function uploadFileToVercel(file) {
-  try {
-    showToast('Enviando VSL... aguarde.');
-
-    // Envia o vídeo pesado direto do navegador para o Vercel Blob sem passar pelo limite da API
-    const blob = await VercelBlob.upload(file.name, file, {
-      access: 'public',
-      handleUploadUrl: '/api/upload',
-    });
-
-    if (blob.url) {
-      renderMediaCard(blob.url, file.type, file.name);
-      showToast('Upload concluído com sucesso!');
+    for (const file of files) {
+      await uploadFileToVercel(file);
     }
-  } catch (err) {
-    console.error('Erro no upload direto:', err);
-    alert('Erro ao enviar o vídeo: ' + err.message);
-  }
-}
+  };
 
-    // 3. CARREGAR LISTA DE ARQUIVOS
-    async function loadFiles() {
-      try {
-        const res = await fetch('/api/files');
-        const files = await res.json();
+  // 2. UPLOAD DIRETO DA VSL PESADA
+  async function uploadFileToVercel(file) {
+    try {
+      showToast('Enviando arquivo... aguarde.');
 
-        if (files && files.length > 0) {
-          if (emptyState) emptyState.style.display = 'none';
-          files.forEach(file => {
-            renderMediaCard(file.url, file.type || (file.url.match(/\.(mp4|webm|mov)$/i) ? 'video/mp4' : 'image/jpeg'), file.pathname);
-          });
-        }
-      } catch (err) {
-        console.log('Nenhum arquivo prévio retornado ou rodando offline local.');
-      }
-    }
-
-    // 4. DELETAR ARQUIVO
-    async function deleteFile(url, cardElement) {
-      if (!confirm('Deseja realmente apagar este arquivo da nuvem?')) return;
-
-      try {
-        const res = await fetch('/api/delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-
-        if (res.ok) {
-          cardElement.remove();
-          showToast('Arquivo deletado com sucesso!');
-          if (mediaGrid.querySelectorAll('.media-card').length === 0 && emptyState) {
-            emptyState.style.display = 'flex';
-          }
-        } else {
-          alert('Erro ao apagar arquivo.');
-        }
-      } catch (err) {
-        console.error('Erro ao deletar:', err);
-      }
-    }
-
-    // 5. COPIAR LINK
-    function copyLink(url) {
-      navigator.clipboard.writeText(url).then(() => {
-        showToast('Link copiado para a área de transferência!');
+      const newBlob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
       });
+
+      if (newBlob.url) {
+        renderMediaCard(newBlob.url, file.type, file.name);
+        showToast('Upload concluído com sucesso!');
+      }
+    } catch (err) {
+      console.error('Erro no upload direto:', err);
+      alert('Erro ao enviar o arquivo: ' + err.message);
     }
+  }
 
-    function showToast(msg) {
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+  // 3. CARREGAR ARQUIVOS
+  async function loadFiles() {
+    try {
+      const res = await fetch('/api/files');
+      const files = await res.json();
+
+      if (files && files.length > 0) {
+        if (emptyState) emptyState.style.display = 'none';
+        files.forEach(file => {
+          renderMediaCard(file.url, file.type || (file.url.match(/\.(mp4|webm|mov)$/i) ? 'video/mp4' : 'image/jpeg'), file.pathname);
+        });
+      }
+    } catch (err) {
+      console.log('Nenhum arquivo prévio ou offline.');
     }
+  }
 
-    // 6. RENDERIZAR CARD VISUAL COM BOTÕES DE COPIAR E DELETAR
-    function renderMediaCard(url, type, fileName) {
-      const card = document.createElement('div');
-      card.className = 'media-card';
+  // 4. DELETAR
+  window.deleteFile = async function(url, cardElement) {
+    if (!confirm('Deseja realmente apagar este arquivo da nuvem?')) return;
 
-      const isVideo = type.startsWith('video/') || url.match(/\.(mp4|webm|mov)$/i);
+    try {
+      const res = await fetch('/api/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
 
-      card.innerHTML = `
-        <div class="overlay-actions">
-          <button class="action-btn" title="Copiar Link" onclick="copyLink('${url}')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-          <button class="action-btn delete" title="Apagar Arquivo">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-          </button>
-        </div>
-        ${isVideo ? `<video src="${url}" controls></video>` : `<img src="${url}" alt="${fileName}" loading="lazy">`}
-        <div class="info">${fileName}</div>
-      `;
-
-      card.querySelector('.action-btn.delete').addEventListener('click', () => deleteFile(url, card));
-      mediaGrid.prepend(card);
+      if (res.ok) {
+        cardElement.remove();
+        showToast('Arquivo deletado!');
+        if (mediaGrid.querySelectorAll('.media-card').length === 0 && emptyState) {
+          emptyState.style.display = 'flex';
+        }
+      } else {
+        alert('Erro ao apagar arquivo.');
+      }
+    } catch (err) {
+      console.error('Erro ao deletar:', err);
     }
-  </script>
+  };
+
+  // 5. COPIAR LINK
+  window.copyLink = function(url) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Link copiado para a área de transferência!');
+    });
+  };
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // 6. RENDERIZAR CARD
+  function renderMediaCard(url, type, fileName) {
+    const card = document.createElement('div');
+    card.className = 'media-card';
+
+    const isVideo = type.startsWith('video/') || url.match(/\.(mp4|webm|mov)$/i);
+
+    card.innerHTML = `
+      <div class="overlay-actions">
+        <button class="action-btn" title="Copiar Link" onclick="window.copyLink('${url}')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+        <button class="action-btn delete" title="Apagar Arquivo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
+      ${isVideo ? `<video src="${url}" controls></video>` : `<img src="${url}" alt="${fileName}" loading="lazy">`}
+      <div class="info">${fileName}</div>
+    `;
+
+    card.querySelector('.action-btn.delete').addEventListener('click', () => window.deleteFile(url, card));
+    mediaGrid.prepend(card);
+  }
+</script>
 </body>
 </html>
