@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud Space Pro Max - Vercel Blob</title>
+  <style>
+    /* RESET & BASE */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 10% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(255, 45, 85, 0.25) 0%, transparent 40%),
+                  linear-gradient(135deg, #090a0f 0%, #171925 50%, #0c0d14 100%);
+      background-attachment: fixed;
+      color: #f5f5f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* GLASSMORPHISM CARD PRINCIPAL */
+    .dashboard {
+      width: 100%;
+      max-width: 1100px;
+      min-height: 85vh;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(35px) saturate(200%);
+      -webkit-backdrop-filter: blur(35px) saturate(200%);
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.125);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      position: relative;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #007aff, #af52de);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(0, 122, 255, 0.4);
+    }
+
+    .brand h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    /* BOTÃO DE UPLOAD ESTILO iOS */
+    .btn-upload {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-upload:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-upload:active {
+      transform: scale(0.96);
+    }
+
+    /* GALERIA / GRID DE ARQUIVOS */
+    .section-title {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 15px;
+      font-weight: 400;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      flex-grow: 1;
+    }
+
+    .media-card {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 4/3;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, border-color 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .media-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .media-card img, .media-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .media-card .overlay-actions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .action-btn {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .action-btn.delete:hover {
+      background: rgba(255, 59, 48, 0.8);
+      border-color: rgba(255, 59, 48, 1);
+    }
+
+    .media-card .info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 15px;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+      font-size: 0.8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    /* OVERLAY DE DRAG & DROP MULTI-TELA */
+    .drop-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 17, 26, 0.75);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 32px;
+      border: 2px dashed rgba(0, 122, 255, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .dashboard.drag-active .drop-overlay {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .drop-overlay-icon {
+      width: 70px;
+      height: 70px;
+      background: rgba(0, 122, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .drop-overlay h2 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(0, 122, 255, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
+    }
+
+    /* ESTADO VAZIO */
+    .empty-state {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 250px;
+      color: rgba(255, 255, 255, 0.4);
+      gap: 10px;
+    }
+
+    /* TOAST FLOATING NOTIFICATION */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(30, 30, 40, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard" id="dashboard">
+    <!-- OVERLAY "SOLTE AQUI" -->
+    <div class="drop-overlay">
+      <div class="drop-overlay-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <h2>Solte aqui para fazer upload</h2>
+    </div>
+
+    <!-- HEADER DO DASHBOARD -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19 9 10.5 15.5 4 21 9.5z"></path>
+            <path d="M2 22.5 12 12.5"></path>
+          </svg>
+        </div>
+        <h1>Cloud Space</h1>
+      </div>
+
+      <!-- BOTÃO DE UPLOAD MANUAL -->
+      <button class="btn-upload" onclick="document.getElementById('file-input').click()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Fazer upload
+      </button>
+
+      <!-- INPUT OCULTO DE ARQUIVOS -->
+      <input type="file" id="file-input" multiple accept="image/*,video/*" style="display: none;" onchange="handleFiles(this.files)">
+    </header>
+
+    <!-- ÁREA DOS ARQUIVOS SALVOS -->
+    <main>
+      <div class="section-title">Seus arquivos armazenados</div>
+      <div class="media-grid" id="media-grid">
+        <div class="empty-state" id="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          <p>Nenhum arquivo enviado ainda.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">Link copiado para a área de transferência!</div>
+
+  <script>
+    const dashboard = document.getElementById('dashboard');
+    const mediaGrid = document.getElementById('media-grid');
+    const emptyState = document.getElementById('empty-state');
+    const toast = document.getElementById('toast');
+
+    // Ao carregar a página, busca os arquivos salvos no Vercel Blob
+    document.addEventListener('DOMContentLoaded', loadFiles);
+
+    // 1. GERENCIAMENTO DE DRAG AND DROP
+    ['dragenter', 'dragover'].forEach(eventName => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dashboard.classList.add('drag-active');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      window.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.target === dashboard || e.type === 'drop') {
+          dashboard.classList.remove('drag-active');
+        }
+      }, false);
+    });
+
+    window.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      handleFiles(files);
+    });
+
+    // 2. PROCESSAR ARQUIVOS E ENVIAR PARA O SERVERLESS DA VERCEL
+    async function handleFiles(files) {
+      if (files.length > 0 && emptyState) {
+        emptyState.style.display = 'none';
+      }
+
+      for (const file of files) {
+        await uploadFileToVercel(file);
+      }
+    }
+
+    async function uploadFileToVercel(file) {
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'x-filename': encodeURIComponent(file.name),
+            'content-type': file.type
+          },
+          body: file
+        });
+
+        const data = await response.json();
+        if (data.url) {
+          renderMediaCard(data.url, file.type, file.name);
+          showToast('Upload concluído com sucesso!');
+        } else {
+          alert('Erro ao fazer upload.');
+        }
+      } catch (err) {
+        console.error('Erro no upload:', err);
+        alert('Erro de conexão ao enviar arquivo.');
+      }
+    }
+
+    // 3. CARREGAR LISTA DE ARQUIVOS
+    async function loadFiles() {
+      try {
+        const res = await fetch('/api/files');
+        const files = await res.json();
+
+        if (files && files.length > 0) {
+          if (emptyState) emptyState.style.display = 'none';
+          files.forEach(file => {
+            renderMediaCard(file.url, file.type || (file.url.match(/\.(mp4|webm|mov)$/i) ? 'video/mp4' : 'image/jpeg'), file.pathname);
+          });
+        }
+      } catch (err) {
+        console.log('Nenhum arquivo prévio retornado ou rodando offline local.');
+      }
+    }
+
+    // 4. DELETAR ARQUIVO
+    async function deleteFile(url, cardElement) {
+      if (!confirm('Deseja realmente apagar este arquivo da nuvem?')) return;
+
+      try {
+        const res = await fetch('/api/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+
+        if (res.ok) {
+          cardElement.remove();
+          showToast('Arquivo deletado com sucesso!');
+          if (mediaGrid.querySelectorAll('.media-card').length === 0 && emptyState) {
+            emptyState.style.display = 'flex';
+          }
+        } else {
+          alert('Erro ao apagar arquivo.');
+        }
+      } catch (err) {
+        console.error('Erro ao deletar:', err);
+      }
+    }
+
+    // 5. COPIAR LINK
+    function copyLink(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copiado para a área de transferência!');
+      });
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // 6. RENDERIZAR CARD VISUAL COM BOTÕES DE COPIAR E DELETAR
+    function renderMediaCard(url, type, fileName) {
+      const card = document.createElement('div');
+      card.className = 'media-card';
+
+      const isVideo = type.startsWith('video/') || url.match(/\.(mp4|webm|mov)$/i);
+
+      card.innerHTML = `
+        <div class="overlay-actions">
+          <button class="action-btn" title="Copiar Link" onclick="copyLink('${url}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+          <button class="action-btn delete" title="Apagar Arquivo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+        ${isVideo ? `<video src="${url}" controls></video>` : `<img src="${url}" alt="${fileName}" loading="lazy">`}
+        <div class="info">${fileName}</div>
+      `;
+
+      card.querySelector('.action-btn.delete').addEventListener('click', () => deleteFile(url, card));
+      mediaGrid.prepend(card);
+    }
+  </script>
+</body>
+</html>
