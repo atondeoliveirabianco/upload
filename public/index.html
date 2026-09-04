@@ -318,8 +318,8 @@
         Fazer upload
       </button>
 
-      <!-- INPUT OCULTO DE ARQUIVOS -->
-      <input type="file" id="file-input" multiple accept="image/*,video/*" style="display: none;" onchange="handleFiles(this.files)">
+      <!-- INPUT OCULTO DE ARQUIVOS (Sem o evento inline onchange) -->
+      <input type="file" id="file-input" multiple accept="image/*,video/*" style="display: none;">
     </header>
 
     <!-- ÁREA DOS ARQUIVOS SALVOS -->
@@ -347,8 +347,18 @@
   const mediaGrid = document.getElementById('media-grid');
   const emptyState = document.getElementById('empty-state');
   const toast = document.getElementById('toast');
+  const fileInput = document.getElementById('file-input');
 
-  document.addEventListener('DOMContentLoaded', loadFiles);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadFiles();
+
+    // Event listener anexado diretamente ao input
+    fileInput?.addEventListener('change', (e) => {
+      if (e.target.files) {
+        handleFiles(e.target.files);
+      }
+    });
+  });
 
   // 1. DRAG AND DROP
   ['dragenter', 'dragover'].forEach(eventName => {
@@ -371,11 +381,11 @@
 
   window.addEventListener('drop', (e) => {
     const dt = e.dataTransfer;
-    if (dt?.files) window.handleFiles(dt.files);
+    if (dt?.files) handleFiles(dt.files);
   });
 
-  // Exporta a função para o HTML encontrar no onchange do input
-  window.handleFiles = async function(files) {
+  // Função interna para gerenciamento dos arquivos
+  async function handleFiles(files) {
     if (files.length > 0 && emptyState) {
       emptyState.style.display = 'none';
     }
@@ -383,9 +393,12 @@
     for (const file of files) {
       await uploadFileToVercel(file);
     }
-  };
+  }
 
-  // 2. UPLOAD DIRETO DA VSL PESADA
+  // Expor no escopo global para compatibilidade interna se necessário
+  window.handleFiles = handleFiles;
+
+  // 2. UPLOAD DIRETO
   async function uploadFileToVercel(file) {
     try {
       showToast('Enviando arquivo... aguarde.');
