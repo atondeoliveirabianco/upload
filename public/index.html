@@ -355,7 +355,7 @@
     window.addEventListener(eventName, (e) => {
       e.preventDefault();
       e.stopPropagation();
-      dashboard.classList.add('drag-active');
+      dashboard?.classList.add('drag-active');
     }, false);
   });
 
@@ -364,18 +364,17 @@
       e.preventDefault();
       e.stopPropagation();
       if (e.target === dashboard || e.type === 'drop') {
-        dashboard.classList.remove('drag-active');
+        dashboard?.classList.remove('drag-active');
       }
     }, false);
   });
 
   window.addEventListener('drop', (e) => {
     const dt = e.dataTransfer;
-    const files = dt.files;
-    handleFiles(files);
+    if (dt?.files) window.handleFiles(dt.files);
   });
 
-  // Tornar a função global para o input do HTML
+  // Exporta a função para o HTML encontrar no onchange do input
   window.handleFiles = async function(files) {
     if (files.length > 0 && emptyState) {
       emptyState.style.display = 'none';
@@ -419,7 +418,7 @@
         });
       }
     } catch (err) {
-      console.log('Nenhum arquivo prévio ou offline.');
+      console.log('Nenhum arquivo prévio.');
     }
   }
 
@@ -451,11 +450,12 @@
   // 5. COPIAR LINK
   window.copyLink = function(url) {
     navigator.clipboard.writeText(url).then(() => {
-      showToast('Link copiado para a área de transferência!');
+      showToast('Link copiado!');
     });
   };
 
   function showToast(msg) {
+    if (!toast) return;
     toast.textContent = msg;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
